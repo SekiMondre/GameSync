@@ -1,7 +1,31 @@
 import GameKit
 @testable import GameSync
 
-class GKLeaderboardMock: GKLeaderboard {
+extension GKEntry {
+    static func stub(score: Int, gamePlayerID: String = "") -> GKEntry {
+        var stub = GKEntry(context: 0, date: Date(), formattedScore: "", rank: 0, score: 0, gamePlayerID: "")
+        stub.score = score
+        stub.gamePlayerID = gamePlayerID
+        return stub
+    }
+}
+
+final class SaverSpy: SaveDelegate {
+    
+    var didCallSave = false
+    var didCallLoad = false
+    
+    func save<T>(_ object: T) async throws where T : Encodable {
+        self.didCallSave = true
+    }
+    
+    func load<T>() async throws -> T? where T : Decodable {
+        self.didCallLoad = true
+        return nil
+    }
+}
+
+final class GKLeaderboardMock: GKLeaderboard {
     
     override var baseLeaderboardID: String { _id }
     
@@ -16,7 +40,7 @@ class GKLeaderboardMock: GKLeaderboard {
 final class GameCenterMock: GameCenter {
     
     private(set) var submittedEntries: [String: Int] = [:]
-    private(set) var submittedAchievements: [String: Achievement] = [:]
+    private(set) var submittedAchievements: [String: GKAchievement] = [:]
     
     var entriesToReturn: [String: GKEntry] = [:]
     var achievementsToReturn: [GKAchievement] = []
@@ -53,32 +77,9 @@ final class GameCenterMock: GameCenter {
         achievementsToReturn
     }
     
-    func reportAchievement(_ achievement: GameSync.Achievement) async throws {
-        try await reportAchievements([achievement])
-    }
-    
-    func reportAchievements(_ achievements: [GameSync.Achievement]) async throws {
+    func reportAchievements(_ achievements: [GKAchievement]) async throws {
         for achievement in achievements {
             submittedAchievements[achievement.identifier] = achievement
         }
     }
 }
-
-
-
-struct GKEntryStub: GKEntry {
-    var context: Int = 0
-    var date: Date = Date()
-    var formattedScore: String = ""
-    var rank: Int = 0
-    var score: Int = 0
-    var gamePlayerID: String = ""
-    
-    static func make(score: Int) -> GKEntryStub {
-        var stub = GKEntryStub()
-        stub.score = score
-        return stub
-    }
-}
-
-

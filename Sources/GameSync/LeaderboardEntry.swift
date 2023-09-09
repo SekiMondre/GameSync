@@ -1,14 +1,12 @@
-public struct LeaderboardEntry: Equatable, Codable {
+public struct LeaderboardEntry: GameCenterLeaderboardEntry {
+    
     public var leaderboardID: String
     public var score: Int
     public var gamePlayerID: String
     
-    init(leaderboardID: String, gkEntry: GKEntry) {
+    public init(leaderboardID: String, gkEntry: GKEntry) async throws {
         self.leaderboardID = leaderboardID
         self.score = gkEntry.score
         self.gamePlayerID = gkEntry.gamePlayerID
     }
-}
-extension LeaderboardEntry: IntComparable {
-    public var intValue: Int { score }
 }

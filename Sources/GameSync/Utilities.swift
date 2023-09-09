@@ -11,19 +11,19 @@ infix operator ~>
 
 infix operator <~
 
-public func ~><A: IntComparable, B: IntComparable>(_ lhs: A, _ rhs: B) -> Bool {
+func ~><A: IntComparable, B: IntComparable>(_ lhs: A, _ rhs: B) -> Bool {
     return lhs.intValue > rhs.intValue
 }
 
-public func <~<A: IntComparable, B: IntComparable>(_ lhs: A, _ rhs: B) -> Bool {
+func <~<A: IntComparable, B: IntComparable>(_ lhs: A, _ rhs: B) -> Bool {
     return lhs.intValue < rhs.intValue
 }
 
-public func ~><A: DoubleComparable, B: DoubleComparable>(_ lhs: A, _ rhs: B) -> Bool {
+func ~><A: DoubleComparable, B: DoubleComparable>(_ lhs: A, _ rhs: B) -> Bool {
     return lhs.doubleValue > rhs.doubleValue
 }
 
-public func <~<A: DoubleComparable, B: DoubleComparable>(_ lhs: A, _ rhs: B) -> Bool {
+func <~<A: DoubleComparable, B: DoubleComparable>(_ lhs: A, _ rhs: B) -> Bool {
     return lhs.doubleValue < rhs.doubleValue
 }
 
