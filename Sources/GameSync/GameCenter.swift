@@ -63,13 +63,13 @@ public struct GKEntry {
         self.gamePlayerID = gkEntry.player.gamePlayerID
     }
     
-    internal init(context: Int, date: Date, formattedScore: String, rank: Int, score: Int, gamePlayerID: String) {
-        self.context = context
-        self.date = date
-        self.formattedScore = formattedScore
-        self.rank = rank
-        self.score = score
-        self.gamePlayerID = gamePlayerID
+    public init() {
+        self.context = 0
+        self.date = Date()
+        self.formattedScore = ""
+        self.rank = 0
+        self.score = 0
+        self.gamePlayerID = ""
     }
 }
 

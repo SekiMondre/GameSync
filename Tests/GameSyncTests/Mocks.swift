@@ -3,7 +3,7 @@ import GameKit
 
 extension GKEntry {
     static func stub(score: Int, gamePlayerID: String = "") -> GKEntry {
-        var stub = GKEntry(context: 0, date: Date(), formattedScore: "", rank: 0, score: 0, gamePlayerID: "")
+        var stub = GKEntry()
         stub.score = score
         stub.gamePlayerID = gamePlayerID
         return stub
