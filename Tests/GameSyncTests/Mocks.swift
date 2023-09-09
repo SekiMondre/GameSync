@@ -15,19 +15,29 @@ class GKLeaderboardMock: GKLeaderboard {
 
 final class GameCenterMock: GameCenter {
     
-    private(set) var submittedScores: [String: Int] = [:]
+    private(set) var submittedEntries: [String: Int] = [:]
+    private(set) var submittedAchievements: [String: Achievement] = [:]
     
     var entriesToReturn: [String: GKEntry] = [:]
+    var achievementsToReturn: [GKAchievement] = []
 
     var isAuthenticated: Bool = false
 
-    var localPlayerID: String = ""
+    var localPlayerID: String = "" {
+        didSet {
+            entriesToReturn.removeAll()
+        }
+    }
     
     func loadLeaderboards(IDs leaderboardIDs: [String]) async throws -> [GKLeaderboard] {
         leaderboardIDs.map { GKLeaderboardMock(id: $0) }
     }
     
-    func loadHighscores(for leaderboards: [GKLeaderboard]) async throws -> [String : GKEntry] {
+    func loadEntry(for leaderboard: GKLeaderboard) async throws -> GameSync.GKEntry? {
+        entriesToReturn[leaderboard.baseLeaderboardID]
+    }
+    
+    func loadEntries(for leaderboards: [GKLeaderboard]) async throws -> [String : GKEntry] {
         var entries = [String: GKEntry]()
         for leaderboard in leaderboards {
             entries[leaderboard.baseLeaderboardID] = entriesToReturn[leaderboard.baseLeaderboardID]
@@ -36,9 +46,25 @@ final class GameCenterMock: GameCenter {
     }
     
     func submitScore(_ score: Int, for gkLeaderboard: GKLeaderboard) async throws {
-        submittedScores[gkLeaderboard.baseLeaderboardID] = score
+        submittedEntries[gkLeaderboard.baseLeaderboardID] = score
+    }
+    
+    func loadAchievements() async throws -> [GKAchievement] {
+        achievementsToReturn
+    }
+    
+    func reportAchievement(_ achievement: GameSync.Achievement) async throws {
+        try await reportAchievements([achievement])
+    }
+    
+    func reportAchievements(_ achievements: [GameSync.Achievement]) async throws {
+        for achievement in achievements {
+            submittedAchievements[achievement.identifier] = achievement
+        }
     }
 }
+
+
 
 struct GKEntryStub: GKEntry {
     var context: Int = 0
@@ -48,45 +74,11 @@ struct GKEntryStub: GKEntry {
     var score: Int = 0
     var gamePlayerID: String = ""
     
-    static func make(score: Int) -> GKEntry {
+    static func make(score: Int) -> GKEntryStub {
         var stub = GKEntryStub()
         stub.score = score
         return stub
     }
 }
 
-actor GameCenterStorageMock: GameCenterDataStore {
-    
-    var currentPlayerID: String?
-    
-    var hasTriedSaving = false
-    var hasOverwrittenSave = false
-    
-    private(set) var cache: [String: Int] = [:]
-    
-    func bindPlayerID(_ playerID: String) {
-        self.currentPlayerID = playerID
-    }
-    
-    func getScore(for leaderboardID: String) async throws -> Int? {
-        cache[leaderboardID]
-    }
-    
-    func setEntry(_ entry: GameSync.GKEntry, forID leaderboardID: String) async throws {
-        cache[leaderboardID] = entry.score
-    }
-    
-    func overwriteSave(newPlayerID: String) async throws {
-        cache.removeAll()
-        currentPlayerID = newPlayerID
-        hasOverwrittenSave = true
-    }
-    
-    func saveIfNeeded() async throws {
-        hasTriedSaving = true
-    }
-    
-    func save<T>(_ object: T) async throws where T : Decodable, T : Encodable {
-        
-    }
-}
+

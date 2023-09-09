@@ -1,6 +1,6 @@
  import GameKit
 
-public protocol GKEntry {
+public protocol GKEntry: IntComparable {
     var context: Int { get }
     var date: Date { get }
     var formattedScore: String { get }
@@ -8,36 +8,67 @@ public protocol GKEntry {
     var score: Int { get }
     var gamePlayerID: String { get }
 }
+extension GKEntry {
+    public var intValue: Int { score }
+}
 
 extension GKLeaderboard.Entry: GKEntry {
     public var gamePlayerID: String { player.gamePlayerID }
 }
 
-public protocol GameCenter {
-    var isAuthenticated: Bool { get }
-    var localPlayerID: String { get }
-    func loadLeaderboards(IDs leaderboardIDs: [String]) async throws -> [GKLeaderboard]
-    func loadHighscores(for leaderboards: [GKLeaderboard]) async throws -> [String: GKEntry]
-    func submitScore(_ score: Int, for gkLeaderboard: GKLeaderboard) async throws
+extension GKAchievement: DoubleComparable {
+    public var doubleValue: Double {
+        percentComplete
+    }
 }
 
-public class GameCenterWrapper: GameCenter {
+public protocol GameCenter {
+    
+    var isAuthenticated: Bool { get }
+    var localPlayerID: String { get }
+    var authenticatedPlayerID: String { get throws }
+    
+    func loadLeaderboards(IDs leaderboardIDs: [String]) async throws -> [GKLeaderboard]
+    func loadEntry(for leaderboard: GKLeaderboard) async throws -> GKEntry?
+    func loadEntries(for leaderboards: [GKLeaderboard]) async throws -> [String: GKEntry]
+    func submitScore(_ score: Int, for gkLeaderboard: GKLeaderboard) async throws
+    
+    func loadAchievements() async throws -> [GKAchievement]
+    func reportAchievement(_ achievement: Achievement) async throws // ?
+    func reportAchievements(_ achievements: [Achievement]) async throws
+}
+
+public extension GameCenter {
+    
+    var authenticatedPlayerID: String {
+        get throws {
+            guard isAuthenticated else { throw GameSyncError.localPlayerNotAuthenticated }
+            return localPlayerID
+        }
+    }
+}
+
+open class GameCenterWrapper: GameCenter {
     
     public init() {}
     
-    public var isAuthenticated: Bool {
+    open var isAuthenticated: Bool {
         GKLocalPlayer.local.isAuthenticated
     }
     
-    public var localPlayerID: String {
+    open var localPlayerID: String {
         GKLocalPlayer.local.gamePlayerID
     }
     
-    public func loadLeaderboards(IDs leaderboardIDs: [String]) async throws -> [GKLeaderboard] {
+    open func loadLeaderboards(IDs leaderboardIDs: [String]) async throws -> [GKLeaderboard] {
         try await GKLeaderboard.loadLeaderboards(IDs: leaderboardIDs)
     }
     
-    public func loadHighscores(for leaderboards: [GKLeaderboard]) async throws -> [String: GKEntry] {
+    open func loadEntry(for leaderboard: GKLeaderboard) async throws -> GKEntry? {
+        try await leaderboard.loadEntries(for: [GKLocalPlayer.local], timeScope: .allTime).0
+    }
+    
+    open func loadEntries(for leaderboards: [GKLeaderboard]) async throws -> [String: GKEntry] {
         return try await withThrowingTaskGroup(
             of: (String, (GKLeaderboard.Entry?, [GKLeaderboard.Entry])).self,
             returning: [String: GKLeaderboard.Entry].self) { group in
@@ -52,7 +83,19 @@ public class GameCenterWrapper: GameCenter {
         }
     }
     
-    public func submitScore(_ score: Int, for gkLeaderboard: GKLeaderboard) async throws {
+    open func submitScore(_ score: Int, for gkLeaderboard: GKLeaderboard) async throws {
         try await gkLeaderboard.submitScore(score, context: 0, player: GKLocalPlayer.local)
+    }
+    
+    open func loadAchievements() async throws -> [GKAchievement] {
+        try await GKAchievement.loadAchievements()
+    }
+    
+    open func reportAchievement(_ achievement: Achievement) async throws {
+        try await GKAchievement.report([achievement.gkAchievement])
+    }
+    
+    open func reportAchievements(_ achievements: [Achievement]) async throws {
+        try await GKAchievement.report(achievements.map { $0.gkAchievement })
     }
 }
