@@ -1,3 +1,3 @@
-# GameSync
+# Game Center Synchronizer
 
-A description of this package.
+A tool to sync Game Center leaderboards and achievements across multiple devices.
