@@ -1,8 +1,4 @@
 
-public protocol IntComparable {
-    var intValue: Int { get }
-}
-
 public protocol DoubleComparable {
     var doubleValue: Double { get }
 }
@@ -11,12 +7,12 @@ infix operator ~>
 
 infix operator <~
 
-func ~><A: IntComparable, B: IntComparable>(_ lhs: A, _ rhs: B) -> Bool {
-    return lhs.intValue > rhs.intValue
+func ~><A: LeaderboardEntry, B: LeaderboardEntry>(_ lhs: A, _ rhs: B) -> Bool {
+    return lhs.ranksHigherThan(rhs)
 }
 
-func <~<A: IntComparable, B: IntComparable>(_ lhs: A, _ rhs: B) -> Bool {
-    return lhs.intValue < rhs.intValue
+func <~<A: LeaderboardEntry, B: LeaderboardEntry>(_ lhs: A, _ rhs: B) -> Bool {
+    return rhs.ranksHigherThan(lhs)
 }
 
 func ~><A: DoubleComparable, B: DoubleComparable>(_ lhs: A, _ rhs: B) -> Bool {

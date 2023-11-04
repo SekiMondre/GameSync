@@ -8,15 +8,16 @@ fileprivate let testIDs = [
 ]
 fileprivate var testID = testIDs[0]
 
-extension LeaderboardEntry {
-    static func make(score: Int, id: String = testID) async throws -> LeaderboardEntry {
-        try await LeaderboardEntry(leaderboardID: id, gkEntry: GKEntry.stub(score: score))
+extension ScoreEntry {
+    static func make(score: Int, id: String = testID) async throws -> ScoreEntry {
+        try await ScoreEntry(leaderboardID: id, gkEntry: GKEntry.stub(score: score))
     }
 }
 
+// TODO: Evaluation tests for reverse leaderboards
 final class GameCenterDataStoreTests: XCTestCase {
     
-    var dataStore: DefaultGameCenterDataStore<LeaderboardEntry, Achievement>!
+    var dataStore: DefaultGameCenterDataStore<ScoreEntry, Achievement>!
     
     var gameCenter: GameCenterMock!
     var saverSpy: SaverSpy!
@@ -24,7 +25,7 @@ final class GameCenterDataStoreTests: XCTestCase {
     override func setUp() async throws {
         self.gameCenter = GameCenterMock()
         self.saverSpy = SaverSpy()
-        self.dataStore = DefaultGameCenterDataStore<LeaderboardEntry, Achievement>(gameCenter: gameCenter)
+        self.dataStore = DefaultGameCenterDataStore<ScoreEntry, Achievement>(gameCenter: gameCenter)
         await self.dataStore.setSaveDelegate(saverSpy)
         
         gameCenter.localPlayerID = "A:_71954f10ba907b1d80955302260d67b4"
@@ -59,7 +60,7 @@ final class GameCenterDataStoreTests: XCTestCase {
     // Sync all
     
     func testSyncAll() async throws {
-        let entry = try await LeaderboardEntry.make(score: 69, id: testIDs[0])
+        let entry = try await ScoreEntry.make(score: 69, id: testIDs[0])
         await dataStore.setLeaderboardEntry(entry, forID: testIDs[0])
         let achievement = Achievement(identifier: testIDs[0])
         await dataStore.setAchievement(achievement)
@@ -75,7 +76,7 @@ final class GameCenterDataStoreTests: XCTestCase {
     // Sync tests
     
     func testSyncLeaderboardsSubmitLocal() async throws {
-        let entry = try await LeaderboardEntry.make(score: 69)
+        let entry = try await ScoreEntry.make(score: 69)
         await dataStore.setLeaderboardEntry(entry, forID: testID)
         
         try await dataStore.handleAuthentication()
@@ -96,7 +97,7 @@ final class GameCenterDataStoreTests: XCTestCase {
     }
     
     func testSyncLeaderboardsConflictResolveToLocal() async throws {
-        let local = try await LeaderboardEntry.make(score: 420)
+        let local = try await ScoreEntry.make(score: 420)
         await dataStore.setLeaderboardEntry(local, forID: testID)
         let remote = GKEntry.stub(score: 69)
         gameCenter.entriesToReturn[testID] = remote
@@ -110,7 +111,7 @@ final class GameCenterDataStoreTests: XCTestCase {
     }
     
     func testSyncLeaderboardsConflictResolveToRemote() async throws {
-        let local = try await LeaderboardEntry.make(score: 69)
+        let local = try await ScoreEntry.make(score: 69)
         await dataStore.setLeaderboardEntry(local, forID: testID)
         let remote = GKEntry.stub(score: 420)
         gameCenter.entriesToReturn[testID] = remote

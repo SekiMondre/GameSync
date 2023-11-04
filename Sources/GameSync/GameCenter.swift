@@ -18,9 +18,7 @@ public protocol GameCenter {
     
     func loadEntries(for leaderboards: [GKLeaderboard]) async throws -> [String: GKEntry]
     
-    func submitScore(_ score: Int, for gkLeaderboard: GKLeaderboard) async throws
-    
-    func submitScore(_ score: Int, isReversed: Bool, for gkLeaderboard: GKLeaderboard) async throws
+    func submitScore(_ score: Int, context: Int, for gkLeaderboard: GKLeaderboard) async throws
     
     // Achievements
     
@@ -47,7 +45,7 @@ extension GKAchievement: DoubleComparable {
     }
 }
 
-public struct GKEntry {
+public struct GKEntry: LeaderboardEntry {
     
     public var context: Int
     public var date: Date
@@ -75,18 +73,18 @@ public struct GKEntry {
     }
 }
 
-extension GKEntry: IntComparable {
-    public var intValue: Int { score }
+extension GKEntry {
     
-    public var isReversed: Bool {
-        context == 1
+    public var sortOrder: SortOrder {
+        context == 1 ? .reverse : .forward // TODO: Read from parsed OptionSet context
     }
     
     public func ranksHigherThan(_ other: Int) -> Bool {
-        if isReversed {
-            return score < other
-        } else {
+        switch sortOrder {
+        case .forward:
             return score > other
+        case .reverse:
+            return score < other
         }
     }
 }
@@ -126,13 +124,8 @@ open class GameCenterWrapper: GameCenter {
             }.mapValues(GKEntry.init)
     }
     
-    open func submitScore(_ score: Int, for gkLeaderboard: GKLeaderboard) async throws {
-        try await gkLeaderboard.submitScore(score, context: 0, player: GKLocalPlayer.local)
-    }
-    
-    open func submitScore(_ score: Int, isReversed: Bool, for gkLeaderboard: GKLeaderboard) async throws {
-        let flag = isReversed ? 1 : 0
-        try await gkLeaderboard.submitScore(score, context: flag, player: GKLocalPlayer.local)
+    public func submitScore(_ score: Int, context: Int, for gkLeaderboard: GKLeaderboard) async throws {
+        try await gkLeaderboard.submitScore(score, context: context, player: GKLocalPlayer.local)
     }
     
     open func loadAchievements() async throws -> [GKAchievement] {

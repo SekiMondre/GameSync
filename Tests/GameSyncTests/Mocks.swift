@@ -69,11 +69,7 @@ final class GameCenterMock: GameCenter {
         return entries
     }
     
-    func submitScore(_ score: Int, for gkLeaderboard: GKLeaderboard) async throws {
-        submittedEntries[gkLeaderboard.baseLeaderboardID] = score
-    }
-    
-    func submitScore(_ score: Int, isReversed: Bool, for gkLeaderboard: GKLeaderboard) async throws {
+    func submitScore(_ score: Int, context: Int, for gkLeaderboard: GKLeaderboard) async throws {
         submittedEntries[gkLeaderboard.baseLeaderboardID] = score
     }
     

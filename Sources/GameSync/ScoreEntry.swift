@@ -1,14 +1,16 @@
-public struct LeaderboardEntry: GameCenterLeaderboardEntry {
+import Foundation
+
+public struct ScoreEntry: GameCenterLeaderboardEntry {
     
     public var leaderboardID: String
     public var score: Int
     public var gamePlayerID: String
-    public var isReversed: Bool
+    public var sortOrder: SortOrder
     
     public init(leaderboardID: String, gkEntry: GKEntry) async throws {
         self.leaderboardID = leaderboardID
         self.score = gkEntry.score
         self.gamePlayerID = gkEntry.gamePlayerID
-        self.isReversed = false
+        self.sortOrder = .highToLow
     }
 }
