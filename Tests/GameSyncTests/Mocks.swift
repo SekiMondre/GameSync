@@ -73,6 +73,10 @@ final class GameCenterMock: GameCenter {
         submittedEntries[gkLeaderboard.baseLeaderboardID] = score
     }
     
+    func submitScore(_ score: Int, isReversed: Bool, for gkLeaderboard: GKLeaderboard) async throws {
+        submittedEntries[gkLeaderboard.baseLeaderboardID] = score
+    }
+    
     func loadAchievements() async throws -> [GKAchievement] {
         achievementsToReturn
     }

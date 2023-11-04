@@ -98,13 +98,19 @@ public extension GameCenterDataStore {
     }
     
     func evaluateLeaderboardEntry(_ entry: LeaderboardType, forID leaderboardID: String) async throws {
-        if entry.score > leaderboardEntries[leaderboardID]?.score ?? 0 {
+        let local = leaderboardEntries[leaderboardID]
+        if local == nil || entry.ranksHigherThan(local!.score) {
             setLeaderboardEntry(entry, forID: leaderboardID)
             try await saveIfNeeded()
         }
+//        if entry.score > leaderboardEntries[leaderboardID]?.score ?? 0 {
+//            setLeaderboardEntry(entry, forID: leaderboardID)
+//            try await saveIfNeeded()
+//        }
         if let leaderboard = try await gameCenter.loadLeaderboards(IDs: [leaderboardID]).first {
             let remote = try await gameCenter.loadEntry(for: leaderboard)
-            if entry.score > remote?.score ?? 0 {
+            if entry.ranksHigherThan(remote?.score ?? 0) {
+//            if entry.score > remote?.score ?? 0 {
                 try await gameCenter.submitScore(entry.score, for: leaderboard)
             }
         }
@@ -140,9 +146,11 @@ public extension GameCenterDataStore {
         for leaderboard in leaderboards {
             let id = leaderboard.baseLeaderboardID
             try await DiffNullables(leaderboardEntries[id], remoteEntries[id]).diff { local, remote in
-                if local ~> remote {
+//                if local ~> remote {
+                if local.ranksHigherThan(remote.score) {
                     try await gameCenter.submitScore(local.score, for: leaderboard)
-                } else if local <~ remote {
+//                } else if local <~ remote {
+                } else if remote.ranksHigherThan(local.score) {
                     setLeaderboardEntry(try await LeaderboardType(leaderboardID: id, gkEntry: remote), forID: id)
                 }
             } onlyA: { local in

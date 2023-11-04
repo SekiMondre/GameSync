@@ -20,6 +20,8 @@ public protocol GameCenter {
     
     func submitScore(_ score: Int, for gkLeaderboard: GKLeaderboard) async throws
     
+    func submitScore(_ score: Int, isReversed: Bool, for gkLeaderboard: GKLeaderboard) async throws
+    
     // Achievements
     
     func loadAchievements() async throws -> [GKAchievement]
@@ -75,6 +77,18 @@ public struct GKEntry {
 
 extension GKEntry: IntComparable {
     public var intValue: Int { score }
+    
+    public var isReversed: Bool {
+        context == 1
+    }
+    
+    public func ranksHigherThan(_ other: Int) -> Bool {
+        if isReversed {
+            return score < other
+        } else {
+            return score > other
+        }
+    }
 }
 
 open class GameCenterWrapper: GameCenter {
@@ -114,6 +128,11 @@ open class GameCenterWrapper: GameCenter {
     
     open func submitScore(_ score: Int, for gkLeaderboard: GKLeaderboard) async throws {
         try await gkLeaderboard.submitScore(score, context: 0, player: GKLocalPlayer.local)
+    }
+    
+    open func submitScore(_ score: Int, isReversed: Bool, for gkLeaderboard: GKLeaderboard) async throws {
+        let flag = isReversed ? 1 : 0
+        try await gkLeaderboard.submitScore(score, context: flag, player: GKLocalPlayer.local)
     }
     
     open func loadAchievements() async throws -> [GKAchievement] {
